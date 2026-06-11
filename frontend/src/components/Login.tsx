@@ -1,8 +1,7 @@
-/** @jsxImportSource react */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Form, Input, Button, Card, Typography, Alert } from 'antd'
-import { MailOutlined, LockOutlined } from '@ant-design/icons'
+import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import api from '../api/axios'
 
 const { Title, Text } = Typography
@@ -15,16 +14,36 @@ export default function Login() {
   const onFinish = async (values: any) => {
     setServerError(null)
     setLoading(true)
+    
+    const inputIdentifier = values.identifier.trim()
+    const isEmail = inputIdentifier.includes('@')
+    
+    // Select endpoint and format body parameters to match backend DTO demands
+    const endpoint = isEmail ? '/accounts/login/email' : '/accounts/login/username'
+    const payload = isEmail 
+      ? { email: inputIdentifier, password: values.password }
+      : { username: inputIdentifier, password: values.password }
+
     try {
-      const response = await api.post('/accounts/login', values)
-      localStorage.setItem('jwt_token', response.data.token)
-      navigate('/dashboard')
+      const response = await api.post(endpoint, payload)
+      
+      if (response.data?.token) {
+        localStorage.setItem('jwt_token', response.data.token)
+        navigate('/dashboard')
+      }
     } catch (error: any) {
       if (error.response?.status === 429) {
         setServerError('Too many login attempts. Please wait a moment and try again.')
-      } else if (error.response?.status === 401) {
-        const backendMessage = error.response.data
-        setServerError(typeof backendMessage === 'string' ? backendMessage : 'Invalid credentials.')
+      } else if (error.response?.status === 500 || error.response?.status === 401) {
+        // Handle array validation errors string lists from backend errors catch frame
+        const backendErrors = error.response.data
+        if (Array.isArray(backendErrors)) {
+          setServerError(backendErrors.join(', '))
+        } else if (typeof backendErrors === 'string') {
+          setServerError(backendErrors)
+        } else {
+          setServerError('Invalid credentials.')
+        }
       } else {
         setServerError('An unexpected error occurred. Please try again later.')
       }
@@ -60,14 +79,13 @@ export default function Login() {
 
         <Form name="login" onFinish={onFinish} layout="vertical" requiredMark={false} size="large">
           <Form.Item
-            name="email"
-            label="Email"
+            name="identifier"
+            label="Username or Email"
             rules={[
-              { required: true, message: 'Email is required' },
-              { type: 'email', message: 'Invalid email format' },
+              { required: true, message: 'Please enter your username or email' }
             ]}
           >
-            <Input prefix={<MailOutlined />} placeholder="Enter your email" />
+            <Input prefix={<UserOutlined />} placeholder="Username or Email" />
           </Form.Item>
 
           <Form.Item
@@ -86,12 +104,12 @@ export default function Login() {
               Sign in
             </Button>
           </Form.Item>
+          
           <Form.Item
             style={{
               marginBottom: 0,
-              display: 'flex',
-              justifyContent: 'center',
-              alignContent: 'bottom',
+              marginTop: 16,
+              textAlign: 'center'
             }}
           >
             Don't have an account? <a href="/register">Register</a>
