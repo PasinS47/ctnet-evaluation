@@ -47,15 +47,15 @@ namespace backend.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "17057c53-668a-4941-a892-22adfd34d252",
+                            Id = "3e7e19b2-377d-4131-8cb0-f437d4ba41e3",
                             Name = "Admin",
-                            NormalizedName = "ADMIN"
+                            NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "05cf0e89-b0be-48e4-a13d-ceb8462c1f0d",
+                            Id = "e2a62735-b821-4058-9064-172c4de51286",
                             Name = "User",
-                            NormalizedName = "USER"
+                            NormalizedName = "User"
                         });
                 });
 
@@ -200,7 +200,8 @@ namespace backend.Migrations
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("varchar(256)")
+                        .UseCollation("utf8mb4_0900_as_cs");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -219,7 +220,8 @@ namespace backend.Migrations
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("varchar(256)")
+                        .UseCollation("utf8mb4_0900_as_cs");
 
                     b.HasKey("Id");
 

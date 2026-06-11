@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using backend.Migrations;
 using backend.Models;
 using backend.Interfaces;
 
@@ -26,12 +25,15 @@ namespace backend.Managers
                 throw new Exception("Email already existed");
 
             var created = await _repository.CreateUserAsync(appUser, password);
+    
             if(!created.Succeeded)
-                throw new Exception(created.Errors.FirstOrDefault().Description ?? "Registration Failed");
+                throw new Exception(created.Errors.FirstOrDefault()?.Description ?? "Registration Failed");
 
             var roleAdded = await _repository.AddUserRoleAsync(appUser, "User");
-            if(!roleAdded.Succeeded)
-                throw new Exception(roleAdded.Errors.FirstOrDefault().Description ?? "Registration Failed");
+            if (!roleAdded.Succeeded)
+            {
+                throw new Exception(roleAdded.Errors.FirstOrDefault()?.Description ?? "Registration Failed");
+            }
 
             var token = _tokenService.CreateToken(appUser);
 

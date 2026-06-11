@@ -19,21 +19,27 @@ namespace backend.Data
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            builder.Entity<AppUser>().HasIndex(u => u.Email).IsUnique();
-            builder.Entity<AppUser>().HasIndex(u => u.UserName).IsUnique();
-            builder.Entity<AppUser>().HasIndex(u => u.NormalizedUserName).IsUnique(false);
             base.OnModelCreating(builder);
+
+            builder.Entity<AppUser>(entity =>
+            {
+                entity.HasIndex(u => u.Email).IsUnique();
+                entity.HasIndex(u => u.UserName).IsUnique();
+                entity.Property(e => e.UserName).UseCollation("utf8mb4_0900_as_cs");    
+                entity.Property(e => e.NormalizedUserName).UseCollation("utf8mb4_0900_as_cs");    
+            });
+
             List<IdentityRole> roles = new List<IdentityRole>
             {
                 new IdentityRole
                 {
                     Name = "Admin",
-                    NormalizedName = "ADMIN"
+                    NormalizedName = "Admin"
                 },
                 new IdentityRole
                 {
                     Name = "User",
-                    NormalizedName = "USER"
+                    NormalizedName = "User"
                 }
             };
             builder.Entity<IdentityRole>().HasData(roles);

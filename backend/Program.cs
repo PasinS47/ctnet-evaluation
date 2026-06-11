@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using backend.Services;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Threading.RateLimiting;
 using Org.BouncyCastle.Asn1.Cms;
 using backend.Managers;
+using backend.Helpers;
 
 var envPath = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, "..", ".env"));
 
@@ -92,6 +94,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole>( options =>
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
 }).AddEntityFrameworkStores<ApplicationDBContext>();
+
+builder.Services.Replace(ServiceDescriptor.Scoped<ILookupNormalizer, CaseSensitiveLookupNormalizer>());
 
 builder.Services.AddAuthentication(options =>{
     options.DefaultAuthenticateScheme = 

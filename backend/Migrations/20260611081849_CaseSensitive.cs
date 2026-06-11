@@ -9,7 +9,7 @@ using MySql.EntityFrameworkCore.Metadata;
 namespace backend.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class CaseSensitive : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,8 +37,10 @@ namespace backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false),
-                    UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
+                    FirstName = table.Column<string>(type: "longtext", nullable: false),
+                    LastName = table.Column<string>(type: "longtext", nullable: false),
+                    UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true, collation: "utf8mb4_0900_as_cs"),
+                    NormalizedUserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true, collation: "utf8mb4_0900_as_cs"),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "tinyint(1)", nullable: false),
@@ -174,8 +176,8 @@ namespace backend.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "0a8db037-2301-4946-b8b0-4ce3f781d3dd", null, "User", "USER" },
-                    { "d8283778-b3b0-48f6-b693-3b2a5d1ab3fc", null, "Admin", "ADMIN" }
+                    { "3e7e19b2-377d-4131-8cb0-f437d4ba41e3", null, "Admin", "Admin" },
+                    { "e2a62735-b821-4058-9064-172c4de51286", null, "User", "User" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -210,15 +212,43 @@ namespace backend.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_Email",
+                table: "AspNetUsers",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_UserName",
+                table: "AspNetUsers",
+                column: "UserName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+            
+            migrationBuilder.Sql("DROP INDEX `UserNameIndex` ON AspNetUsers;");
+
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers MODIFY UserName VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;");
+
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers MODIFY NormalizedUserName VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;");
+
+            migrationBuilder.Sql("CREATE UNIQUE INDEX `UserNameIndex` ON AspNetUsers (NormalizedUserName);");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("DROP INDEX `UserNameIndex` ON AspNetUsers;");
+
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers MODIFY UserName VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;");
+
+            migrationBuilder.Sql("ALTER TABLE AspNetUsers MODIFY NormalizedUserName VARCHAR(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;");
+
+            migrationBuilder.Sql("CREATE UNIQUE INDEX `UserNameIndex` ON AspNetUsers (NormalizedUserName);");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 

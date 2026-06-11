@@ -11,8 +11,8 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    [Migration("20260610064603_Email")]
-    partial class Email
+    [Migration("20260611081849_CaseSensitive")]
+    partial class CaseSensitive
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,15 +50,15 @@ namespace backend.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "bb1b3b76-405b-4846-a331-81fc9f54e903",
+                            Id = "3e7e19b2-377d-4131-8cb0-f437d4ba41e3",
                             Name = "Admin",
-                            NormalizedName = "ADMIN"
+                            NormalizedName = "Admin"
                         },
                         new
                         {
-                            Id = "4ab787e1-7eba-4b4e-90be-2bb31093154e",
+                            Id = "e2a62735-b821-4058-9064-172c4de51286",
                             Name = "User",
-                            NormalizedName = "USER"
+                            NormalizedName = "User"
                         });
                 });
 
@@ -203,7 +203,8 @@ namespace backend.Migrations
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("varchar(256)")
+                        .UseCollation("utf8mb4_0900_as_cs");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("longtext");
@@ -222,7 +223,8 @@ namespace backend.Migrations
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("varchar(256)")
+                        .UseCollation("utf8mb4_0900_as_cs");
 
                     b.HasKey("Id");
 
@@ -235,6 +237,9 @@ namespace backend.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
