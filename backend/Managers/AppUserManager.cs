@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using backend.Helpers;
 using backend.Interfaces;
 using backend.Models;
 
@@ -24,13 +25,14 @@ namespace backend.Managers
 
             return user;
         }
-        public async Task<List<AppUser>> GetAllUsersAsync()
+        public async Task<(List<AppUser>, int)> GetAllUsersAsync(QueryObject queryObject)
         {
-            var users = await _appUserRepository.GetAllUsersAsync();
-            if(users == null)
+            var skippedPage = (queryObject.PageNumber - 1) * queryObject.PageSize;
+            var (users, total) = await _appUserRepository.GetAllUsersAsync(skippedPage, queryObject.PageSize);
+            if(users == null || total == 0)
                 throw new Exception("No users in database");
 
-            return users;
+            return (users, total);
         }
     }
 }

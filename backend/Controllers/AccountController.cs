@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;     
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using backend.Helpers;
 
 namespace backend.Controllers
 {
@@ -86,13 +87,13 @@ namespace backend.Controllers
 
         [HttpGet]
         [Authorize] 
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers([FromQuery] QueryObject queryObject)
         {
-            var result = await _appUserService.GetAllUsersAsync();
+            var result = await _appUserService.GetAllUsersAsync(queryObject);
             if (!result.Success)
                 return StatusCode(500, result.Errors);
 
-            return Ok(result.Data);
+            return Ok(new { data = result.Data, total = result.Total });
         }
     }
 }

@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using backend.Dtos.Accounts;
+using backend.Helpers;
 
 namespace backend.Interfaces
 {
     public interface IAppUserService
     {
-        Task<AppUsersResponseDto> GetAllUsersAsync();
+        Task<AppUsersResponseDto> GetAllUsersAsync(QueryObject queryObject);
         Task<AppUserResponseDto> GetUserByEmail(string email);
     }
 }

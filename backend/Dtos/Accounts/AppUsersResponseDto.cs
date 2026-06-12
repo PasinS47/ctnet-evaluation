@@ -10,5 +10,6 @@ namespace backend.Dtos.Accounts
         public bool Success { get; set; }
         public IEnumerable<string>? Errors { get; set; }
         public List<GetAccountDto>? Data { get; set; }
+        public int Total { get; set; }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Data;
+using backend.Helpers;
 using backend.Interfaces;
 using backend.Models;
 using Microsoft.AspNetCore.Identity;
@@ -43,9 +44,13 @@ namespace backend.Repositories
             return await _userManager.AddToRoleAsync(user, role);
         }
 
-        public async Task<List<AppUser>?> GetAllUsersAsync()
+        public async Task<(List<AppUser>?, int)> GetAllUsersAsync(int skippedPage, int pageSize)
         {
-            return await _userManager.Users.ToListAsync();
+            var query = _userManager.Users.AsQueryable();
+
+            var total = await query.CountAsync();
+            var users = await query.Skip(skippedPage).Take(pageSize).ToListAsync();
+            return (users, total);
         }
 
         public async Task<SignInResult> CheckSignInPassword(AppUser user, string password)

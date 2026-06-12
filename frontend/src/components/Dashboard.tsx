@@ -1,106 +1,176 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Layout, Card, Table, Typography, Button, Descriptions, Spin, Space, FloatButton, message, Modal, Alert } from 'antd';
-import { LogoutOutlined, EyeInvisibleOutlined, ExperimentOutlined, SmileOutlined } from '@ant-design/icons';
-import api from '../api/axios';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import {
+  Layout,
+  Card,
+  Table,
+  Typography,
+  Button,
+  Descriptions,
+  Spin,
+  Space,
+  FloatButton,
+  message,
+  Modal,
+  Alert,
+} from 'antd'
+import {
+  LogoutOutlined,
+  EyeInvisibleOutlined,
+  ExperimentOutlined,
+  SmileOutlined,
+} from '@ant-design/icons'
+import api from '../api/axios'
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
+const { Header, Content } = Layout
+const { Title, Text } = Typography
 
 interface User {
-  id: string;
-  email: string;
-  username: string; 
+  id: string
+  email: string
+  username: string
+}
+
+interface PaginatedUsersResponse {
+  data: User[]
+  total: number
 }
 
 const DEV_QUOTES = [
   "Your code compiles on the first try. (Just kidding, but wouldn't that be nice?)",
-  "You write cleaner code than the person who left this repo template.",
-  "Your commits are a work of art. Well, a work of abstract art, anyway.",
-  "At least 70% of your Stack Overflow copy-pastes work perfectly.",
+  'You write cleaner code than the person who left this repo template.',
+  'Your commits are a work of art. Well, a work of abstract art, anyway.',
+  'At least 70% of your Stack Overflow copy-pastes work perfectly.',
   "You haven't pushed a broken migration to production today. Keep the streak alive!",
-  "There are 2 types of login endpoints here, and both are judging your password choice."
-];
+  'There are 2 types of login endpoints here, and both are judging your password choice.',
+]
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [allUsers, setAllUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [usersLoading, setUsersLoading] = useState(false)
+
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 5,
+    total: 0,
+  })
 
   // Funny Add-on States
-  const [funQuote] = useState(() => DEV_QUOTES[Math.floor(Math.random() * DEV_QUOTES.length)]);
+  const [funQuote] = useState(() => DEV_QUOTES[Math.floor(Math.random() * DEV_QUOTES.length)])
+
+  const fetchUsers = async (pageNumber: number = 1, pageSize: number = 5) => {
+    setUsersLoading(true)
+    try {
+      const response = await api.get<PaginatedUsersResponse>('/accounts', {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+        },
+      })
+
+      setAllUsers(response.data.data)
+      setPagination({
+        current: pageNumber,
+        pageSize: pageSize,
+        total: response.data.total,
+      })
+    } catch (error) {
+      console.error('Failed to fetch users:', error)
+      message.error('Unable to load system users list')
+      setAllUsers([])
+    } finally {
+      setUsersLoading(false)
+    }
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const meRes = await api.get('/accounts/me');
-        setCurrentUser(meRes.data);
+        const meRes = await api.get('/accounts/me')
+        setCurrentUser(meRes.data)
 
-        const usersRes = await api.get('/accounts');
-        setAllUsers(usersRes.data);
+        await fetchUsers(1, pagination.pageSize)
       } catch (error) {
-        localStorage.removeItem('jwt_token');
-        navigate('/login');
+        localStorage.removeItem('jwt_token')
+        navigate('/login')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchDashboardData();
-  }, [navigate]);
+    fetchDashboardData()
+  }, [navigate])
 
   const handleLogout = () => {
-    localStorage.removeItem('jwt_token');
-    navigate('/login');
-  };
+    localStorage.removeItem('jwt_token')
+    navigate('/login')
+  }
+
+  const handleTableChange = (newPagination: any) => {
+    fetchUsers(newPagination.current, newPagination.pageSize)
+  }
 
   // Safe helper to extract username regardless of backend casing variants (username / userName / Username)
   const getUsernameString = (userObj: any) => {
-    return userObj?.username || userObj?.userName || userObj?.Username || 'N/A';
-  };
+    return userObj?.username || userObj?.userName || userObj?.Username || 'N/A'
+  }
 
   const tableColumns = [
-    { 
-      title: 'ID', 
-      dataIndex: 'id', 
+    {
+      title: 'ID',
+      dataIndex: 'id',
       key: 'id',
-      render: (text: string) => <Text type="secondary" style={{ fontSize: '0.85rem' }}>{text}</Text>
+      render: (text: string) => (
+        <Text type="secondary" style={{ fontSize: '0.85rem' }}>
+          {text}
+        </Text>
+      ),
     },
-    { 
-      title: 'Username', 
+    {
+      title: 'Username',
       key: 'userName',
-      render: (_: any, record: any) => <Text strong>{getUsernameString(record)}</Text>
+      render: (_: any, record: any) => <Text strong>{getUsernameString(record)}</Text>,
     },
-    { 
-      title: 'Email', 
-      dataIndex: 'email', 
-      key: 'email' 
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
     },
-  ];
+  ]
 
   if (loading || !currentUser) {
     return (
-      <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div
+        style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+      >
         <Spin size="large" tip="Loading dashboard..." />
       </div>
-    );
+    )
   }
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        background: '#fff', 
-        padding: '0 24px',
-        boxShadow: '0 1px 4px rgba(0,21,41,0.08)',
-        zIndex: 1
-      }}>
-        <Title level={4} style={{ margin: 0 }}>Overview</Title>
+      <Header
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: '#fff',
+          padding: '0 24px',
+          boxShadow: '0 1px 4px rgba(0,21,41,0.08)',
+          zIndex: 1,
+        }}
+      >
+        <Title level={4} style={{ margin: 0 }}>
+          Overview
+        </Title>
         <Space size="large">
-          <Text>Welcome back, <strong>{getUsernameString(currentUser)}</strong></Text>
+          <Text>
+            Welcome back, <strong>{getUsernameString(currentUser)}</strong>
+          </Text>
           <Button type="text" icon={<LogoutOutlined />} onClick={handleLogout} danger>
             Log out
           </Button>
@@ -109,10 +179,13 @@ export default function Dashboard() {
 
       <Content style={{ padding: '24px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>
         <Space direction="vertical" size="large" style={{ display: 'flex' }}>
-          
           {/* Add-on */}
           <Alert
-            message={<Text strong style={{ color: '#b78103' }}><SmileOutlined /> Daily Developer Affirmation</Text>}
+            message={
+              <Text strong style={{ color: '#b78103' }}>
+                <SmileOutlined /> Daily Developer Affirmation
+              </Text>
+            }
             description={<Text italic>"{funQuote}"</Text>}
             type="warning"
             style={{ background: '#fffbe6', borderColor: '#ffe58f', borderRadius: 8 }}
@@ -132,19 +205,33 @@ export default function Dashboard() {
           </Card>
 
           {/* System Users Table */}
-          <Card title="System Users" bordered={false} style={{ borderRadius: 8 }}>
-            <Table 
-              dataSource={allUsers} 
-              columns={tableColumns} 
-              rowKey="id" 
-              pagination={{ pageSize: 5 }} 
+          <Card
+            title="System Users"
+            bordered={false}
+            style={{ borderRadius: 8 }}
+            extra={<Text type="secondary">Total: {pagination.total} users</Text>}
+          >
+            <Table
+              dataSource={allUsers}
+              columns={tableColumns}
+              rowKey="id"
+              loading={usersLoading}
+              pagination={{
+                current: pagination.current,
+                pageSize: pagination.pageSize,
+                total: pagination.total,
+                showQuickJumper: true,
+                showTotal: (total) => `Total ${total} users`,
+              }}
+              onChange={handleTableChange}
               size="middle"
+              locale={{
+                emptyText: usersLoading ? 'Loading...' : 'No users found',
+              }}
             />
           </Card>
-
         </Space>
       </Content>
-
     </Layout>
-  );
+  )
 }

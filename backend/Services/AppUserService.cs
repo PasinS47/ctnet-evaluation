@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using backend.Interfaces;
 using backend.Dtos.Accounts;
 using backend.Models;
+using backend.Helpers;
 
 namespace backend.Services
 {
@@ -16,11 +17,11 @@ namespace backend.Services
         {
             _appUserManager = appUserManager;
         }
-        public async Task<AppUsersResponseDto> GetAllUsersAsync()
+        public async Task<AppUsersResponseDto> GetAllUsersAsync(QueryObject queryObject)
         {
             try
             {
-                var users = await _appUserManager.GetAllUsersAsync();
+                var (users, total) = await _appUserManager.GetAllUsersAsync(queryObject);
 
                 return new AppUsersResponseDto
                 {
@@ -31,12 +32,13 @@ namespace backend.Services
                         Username = user.UserName,
                         Email = user.Email
                         
-                    }).ToList()
+                    }).ToList(),
+                    Total = total
                 };
             }
             catch (Exception e)
             {
-                return new AppUsersResponseDto { Success = false, Errors = new[] { e.Message } };
+                return new AppUsersResponseDto { Success = false, Errors = new[] { e.Message }, Total = 0 };
             }
         }
 
